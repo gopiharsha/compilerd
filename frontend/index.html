@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Judge</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        textarea, input, select, button { width: 100%; margin: 10px 0; padding: 10px; }
+        pre { background-color: #f4f4f4; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid black; }
+        th, td { padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Judge</h1>
+        <input type="text" id="username" placeholder="Enter your username">
+        <textarea id="code" placeholder="Write your code here..."></textarea>
+        <select id="language">
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="java">Java</option>
+        </select>
+        <button onclick="submitCode()">Submit</button>
+        <h2>Output</h2>
+        <pre id="output"></pre>
+
+        <h2>Leaderboard</h2>
+        <table id="leaderboard">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Language</th>
+                    <th>Result</th>
+                    <th>Submitted At</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <script>
+        function submitCode() {
+            const username = document.getElementById('username').value;
+            const code = document.getElementById('code').value;
+            const language = document.getElementById('language').value;
+
+            fetch('http://localhost:5000/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, language, code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').textContent = data.stdout || data.stderr;
+                loadLeaderboard();
+            });
+        }
+
+        function loadLeaderboard() {
+            fetch('http://localhost:5000/leaderboard')
+            .then(response => response.json())
+            .then(data => {
+                const leaderboard = document.getElementById('leaderboard').getElementsByTagName('tbody')[0];
+                leaderboard.innerHTML = '';
+                data.forEach(entry => {
+                    const row = leaderboard.insertRow();
+                    const usernameCell = row.insertCell(0);
+                    const languageCell = row.insertCell(1);
+                    const resultCell = row.insertCell(2);
+                    const createdAtCell = row.insertCell(3);
+
+                    usernameCell.textContent = entry.username;
+                    languageCell.textContent = entry.language;
+                    resultCell.textContent = entry.result;
+                    createdAtCell.textContent = entry.created_at;
+                });
+            });
+        }
+
+        // Load leaderboard on page load
+        window.onload = loadLeaderboard;
+    </script>
+</body>
+</html>
